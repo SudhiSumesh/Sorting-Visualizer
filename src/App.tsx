@@ -1,130 +1,13 @@
 import { FormEvent, useEffect, useReducer } from "react"
 import { Button } from "./components/ui/button"
-import { cn } from "./lib/utils"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./components/ui/select"
-import { Label } from "./components/ui/label"
-import { Slider } from "./components/ui/slider"
 import { Input } from "./components/ui/input"
-import { bubbleSortGenerator } from "./sortingAlgorithms/bubble"
-import { insertionSortGenerator } from "./sortingAlgorithms/insertion"
-import { selectionSortGenerator } from "./sortingAlgorithms/selection"
-import { quickSortGenerator } from "./sortingAlgorithms/quick"
-import { mergeSortGenerator } from "./sortingAlgorithms/merge"
+import { Label } from "./components/ui/label"
+import { Select,SelectContent,SelectGroup,SelectItem,SelectTrigger,SelectValue,} from "./components/ui/select"
+import { Slider } from "./components/ui/slider"
+import { MAX_ARRAY_LENGTH, MAX_SPEED, MIN_ARRAY_LENGTH, MIN_SPEED, OPERATIONS_PER_SECOND, SORTING_ALGORITHMS } from "./constsnts"
+import { cn, getRandomElements, reducer } from "./lib/utils"
+import { SortingAlgorithm } from "./types"
 
-const SORTING_ALGORITHMS = [
-  "bubble",
-  "insertion",
-  "selection",
-  "quick",
-  "merge",
-] as const
-const OPERATIONS_PER_SECOND = 2
-
-type Action =
-  | { type: "RANDOMIZE" }
-  | { type: "SORT" }
-  | { type: "STOP" }
-  | { type: "FINISH_SORTING" }
-  | { type: "CHANGE_ALGORITHM"; payload: SortingAlgorithm }
-  | { type: "CHANGE_SPEED"; payload: number }
-  | { type: "CHANGE_ARRAY_LENGTH"; payload: number }
-  | { type: "SET_INDICES"; payload: { active: number[]; sorted: number[] } }
-type SortingAlgorithm = (typeof SORTING_ALGORITHMS)[number]
-type State = {
-  sortingAlgorithm: SortingAlgorithm
-  sortingSpeed: number
-  randomArray: number[]
-  activeIndices: number[]
-  sortedIndices: number[]
-  activeSortingFunction?: Generator<[number[], number[]]>
-  isSorting: boolean
-}
-
-const MAX_ARRAY_LENGTH = 300
-const MIN_ARRAY_LENGTH = 10
-const MAX_SPEED = 50
-const MIN_SPEED = 1
-
-function reducer(state: State, action: Action): State {
-  switch (action.type) {
-    case "RANDOMIZE":
-      if (state.isSorting) return state
-      return {
-        ...state,
-        activeIndices: [],
-        sortedIndices: [],
-        isSorting: false,
-        activeSortingFunction: undefined,
-        randomArray: getRandomElements(state.randomArray.length),
-      }
-    case "SORT":
-      return {
-        ...state,
-        activeSortingFunction:
-          state.activeSortingFunction ??
-          getSortingFunction(state.sortingAlgorithm)(state.randomArray),
-        isSorting: true,
-      }
-    case "STOP":
-      return {
-        ...state,
-        isSorting: false,
-      }
-    case "FINISH_SORTING":
-      return {
-        ...state,
-        isSorting: false,
-        activeSortingFunction: undefined,
-      }
-    case "CHANGE_ALGORITHM":
-      if (state.isSorting) return state
-      return {
-        ...state,
-        sortingAlgorithm: action.payload,
-        activeIndices: [],
-        sortedIndices: [],
-        activeSortingFunction: undefined,
-      }
-    case "CHANGE_SPEED":
-      if (action.payload > MAX_SPEED || action.payload < MIN_SPEED) return state
-      return {
-        ...state,
-        sortingSpeed: action.payload,
-      }
-    case "CHANGE_ARRAY_LENGTH":
-      if (
-        action.payload < MIN_ARRAY_LENGTH ||
-        action.payload > MAX_ARRAY_LENGTH ||
-        isNaN(action.payload)
-      ) {
-        return state
-      }
-      if (state.isSorting) return state
-      return {
-        ...state,
-        activeIndices: [],
-        sortedIndices: [],
-        isSorting: false,
-        activeSortingFunction: undefined,
-        randomArray: getRandomElements(action.payload),
-      }
-    case "SET_INDICES":
-      return {
-        ...state,
-        activeIndices: action.payload.active,
-        sortedIndices: action.payload.sorted,
-      }
-    default:
-      throw new Error(`Invalid action: ${action satisfies never}`)
-  }
-}
 
 export default function App() {
   const [
@@ -294,28 +177,4 @@ export default function App() {
       </main>
     </div>
   )
-}
-
-function getRandomElements(arraySize: number) {
-  return Array.from(
-    { length: arraySize },
-    () => Math.floor(Math.random() * 100) + 1
-  )
-}
-
-function getSortingFunction(algorithm: SortingAlgorithm) {
-  switch (algorithm) {
-    case "bubble":
-      return bubbleSortGenerator
-    case "insertion":
-      return insertionSortGenerator
-    case "selection":
-      return selectionSortGenerator
-    case "quick":
-      return quickSortGenerator
-    case "merge":
-      return mergeSortGenerator
-    default:
-      throw new Error(`Invalid algorithm: ${algorithm satisfies never}`)
-  }
 }
